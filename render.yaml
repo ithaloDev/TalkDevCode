@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: talkdevcode
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn run:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SQLALCHEMY_DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
