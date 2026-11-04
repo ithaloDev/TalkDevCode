@@ -23,7 +23,7 @@ export class ApiClient {
 
     let response;
     try {
-      response = await fetch(`http://127.0.0.1:8000/api/v1${path}`, {
+      response = await fetch(`${this.baseUrl}${path}`, {
         method, 
         headers, 
         signal,
