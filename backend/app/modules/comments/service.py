@@ -73,9 +73,8 @@ class CommentService:
             comment = await comment_repo.create(content=data.content, post_id=data.post_id, user_id=user_id, parent_id=data.parent_id)
 
             await self.uow.commit()
-            await self.uow.refresh(comment)
-            
-            return CommentResponse.model_validate(comment)
+            persisted_comment = await comment_repo.get_by_id(comment.id)
+            return CommentResponse.model_validate(persisted_comment)
 
     async def update_comment(self, comment_id: UUID, content: CommentUpdate, user_id: UUID) -> Optional[CommentResponse]:
         async with self.uow:
