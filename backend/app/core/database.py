@@ -18,7 +18,7 @@ if database_url.drivername in {"postgres", "postgresql"}:
     query = dict(database_url.query)
     sslmode = query.pop("sslmode", None)
 
-    if sslmode == "require":
+    if sslmode == "require" or (database_url.host or "").endswith(".pooler.supabase.com"):
         connect_args["ssl"] = True
     elif sslmode not in (None, "disable"):
         raise ValueError(
