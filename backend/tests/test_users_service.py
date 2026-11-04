@@ -89,3 +89,26 @@ def test_password_accepts_up_to_72_utf8_bytes():
         password="á" * 36,
     )
     assert request.password == "á" * 36
+
+
+@pytest.mark.asyncio
+async def test_register_maps_unique_constraint_violation_to_conflict(make_uow_factory):
+    from sqlalchemy.exc import IntegrityError
+    from app.modules.users.schema import UserCreateRequest
+
+    repo = AsyncMock(spec=UserRepository)
+    repo.create.side_effect = IntegrityError("INSERT", {}, Exception("duplicate"))
+    uow = make_uow_factory({UserRepository: repo})
+
+    with pytest.raises(HTTPException) as exc:
+        await UserService(uow).register_new_user(
+            UserCreateRequest(
+                username="usuario",
+                email="usuario@example.com",
+                password="senha-segura-123",
+            )
+        )
+
+    assert exc.value.status_code == 409
+    uow.rollback.assert_awaited()
+    uow.commit.assert_not_awaited()
