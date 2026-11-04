@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.core.config import settings
-from app.core.database import Base, engine
+from app.core.database import engine
 
 
 logger = logging.getLogger("talkdevcode")
@@ -19,8 +19,7 @@ logger = logging.getLogger("talkdevcode")
 async def lifespan(app: FastAPI):
     logger.info("Iniciando TalkDevCode API")
     try:
-        async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all)
+        # O schema é gerenciado exclusivamente pelo Alembic durante o deploy.
         yield
     finally:
         await engine.dispose()
