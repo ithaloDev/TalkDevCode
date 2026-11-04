@@ -6,6 +6,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.api import api_router
 from app.core.config import settings
@@ -56,7 +58,16 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["Health"])
     async def health_check():
-        return {"status": "ok"}
+        try:
+            async with engine.connect() as connection:
+                await connection.execute(text("SELECT 1"))
+        except SQLAlchemyError:
+            logger.exception("Health check falhou: banco de dados indisponível")
+            return JSONResponse(
+                status_code=503,
+                content={"status": "unavailable", "database": "disconnected"},
+            )
+        return {"status": "ok", "database": "connected"}
 
     frontend_dir = Path(__file__).resolve().parents[2] / "frontend"
     if frontend_dir.is_dir():
