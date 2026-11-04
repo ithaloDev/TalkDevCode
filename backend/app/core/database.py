@@ -1,18 +1,45 @@
 from sqlalchemy import event
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
 
+
 class Base(DeclarativeBase):
     pass
 
-_is_sqlite = settings.SQLALCHEMY_DATABASE_URL.startswith("sqlite")
-_connect_args = {"check_same_thread": False} if _is_sqlite else {}
+
+database_url = make_url(settings.SQLALCHEMY_DATABASE_URL)
+connect_args = {}
+
+if database_url.drivername in {"postgres", "postgresql"}:
+    database_url = database_url.set(drivername="postgresql+asyncpg")
+    query = dict(database_url.query)
+    sslmode = query.pop("sslmode", None)
+
+    if sslmode == "require":
+        connect_args["ssl"] = "require"
+    elif sslmode not in (None, "disable"):
+        raise ValueError(
+            "SSL mode não suportado na URL do PostgreSQL. "
+            "Use sslmode=require para conexões Supabase."
+        )
+
+    # O pooler em modo transaction (porta 6543) não mantém prepared statements.
+    if database_url.port == 6543:
+        query["prepared_statement_cache_size"] = "0"
+
+    database_url = database_url.set(query=query)
+
+_is_sqlite = database_url.drivername.startswith("sqlite")
+
+if _is_sqlite:
+    connect_args["check_same_thread"] = False
 
 engine = create_async_engine(
-    settings.SQLALCHEMY_DATABASE_URL,
-    connect_args=_connect_args,
+    database_url,
+    connect_args=connect_args,
     echo=settings.SQL_ECHO,
     pool_pre_ping=True,
 )
