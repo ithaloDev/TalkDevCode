@@ -21,7 +21,7 @@ class CommentService:
             
             return [CommentResponse.model_validate(comment) for comment in comments]
 
-    async def list_comments_by_post(self, post_id: UUID, limit: int = PaginationParams.limit, offset: int = PaginationParams.offset) -> Sequence[CommentResponse]:
+    async def list_comments_by_post(self, post_id: UUID, limit: int = 20, offset: int = 0) -> Sequence[CommentResponse]:
         async with self.uow:
             comment_repo = self.uow.get_repository(CommentRepository)
             post_repo = self.uow.get_repository(PostRepository)
