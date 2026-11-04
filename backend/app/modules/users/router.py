@@ -69,4 +69,3 @@ async def delete_user_by_staff(
     service: UserService = Depends(get_user_service),
 ):
     await service.delete_user_by_staff(target_user_id=user_id, admin_id=current_user.id)
-    return "Usuário deletado com sucesso"
