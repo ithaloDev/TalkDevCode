@@ -98,8 +98,6 @@ class CommentService:
             comment = await repo.update(comment, content.content)
 
             await self.uow.commit()
-            await self.uow.refresh(comment)
-            
             return CommentResponse.model_validate(comment)
 
     
