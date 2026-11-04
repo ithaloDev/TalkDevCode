@@ -1,0 +1,27 @@
+/* Design tokens and themes */
+:root {
+  color-scheme: dark;
+  --font-ui: "Inter", system-ui, sans-serif;
+  --font-reading: "Merriweather", Georgia, serif;
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px;
+  --header-height: 72px; --sidebar-width: 350px;
+  --shadow-card: 0 12px 32px rgb(0 0 0 / .14);
+  --transition: 180ms ease;
+  --color-primary: #58A6FF; --color-primary-hover: #79B8FF; --color-primary-soft: rgb(88 166 255 / .14);
+  --color-danger: #E05252; --color-success: #3FB950;
+}
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #070B14; --color-surface: #0D1424; --color-surface-raised: #141F35;
+  --color-text: #E8EEF9; --color-muted: #9AAAC4; --color-border: #24324B;
+  --color-input: #0A1120; --color-overlay: rgb(0 0 0 / .68);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #F4F7F4; --color-surface: #FFFFFF; --color-surface-raised: #EDF3EE;
+  --color-text: #17231B; --color-muted: #647369; --color-border: #DCE6DE;
+  --color-input: #F7FAF7; --color-overlay: rgb(20 35 25 / .48);
+  --shadow-card: 0 12px 32px rgb(28 55 36 / .08);
+}
