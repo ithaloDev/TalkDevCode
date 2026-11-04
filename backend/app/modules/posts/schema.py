@@ -3,7 +3,7 @@ from uuid import UUID
 
 from app.core.datetime_utils import utc_isoformat
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, field_serializer, Field
+from pydantic import BaseModel, ConfigDict, StringConstraints, field_serializer, Field, model_validator
 from typing import Annotated, Optional
 
 
@@ -26,6 +26,12 @@ class PostCreateSchema(BaseModel):
 class PostUpdateSchema(BaseModel):
     title: Optional[Title] = None
     content: Optional[Content] = None
+
+    @model_validator(mode="after")
+    def validate_at_least_one_field(self):
+        if self.title is None and self.content is None:
+            raise ValueError("Informe ao menos o título ou o conteúdo para atualizar.")
+        return self
 
 
 class PostAuthorSchema(BaseModel):
