@@ -14,7 +14,7 @@ class CommentService:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
 
-    async def list_comments(self, limit: int = PaginationParams.limit, offset: int = PaginationParams.offset) -> Sequence[CommentResponse]:
+    async def list_comments(self, limit: int = 20, offset: int = 0) -> Sequence[CommentResponse]:
         async with self.uow:
             repo = self.uow.get_repository(CommentRepository)
             comments = await repo.get_all(limit=limit, offset=offset)
@@ -73,9 +73,8 @@ class CommentService:
             comment = await comment_repo.create(content=data.content, post_id=data.post_id, user_id=user_id, parent_id=data.parent_id)
 
             await self.uow.commit()
-            await self.uow.refresh(comment)
-            
-            return CommentResponse.model_validate(comment)
+            persisted_comment = await comment_repo.get_by_id(comment.id)
+            return CommentResponse.model_validate(persisted_comment)
 
     async def update_comment(self, comment_id: UUID, content: CommentUpdate, user_id: UUID) -> Optional[CommentResponse]:
         async with self.uow:
@@ -99,8 +98,6 @@ class CommentService:
             comment = await repo.update(comment, content.content)
 
             await self.uow.commit()
-            await self.uow.refresh(comment)
-            
             return CommentResponse.model_validate(comment)
 
     

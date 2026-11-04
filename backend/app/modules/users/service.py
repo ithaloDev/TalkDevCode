@@ -23,17 +23,21 @@ class UserService:
             repo = self.uow.get_repository(UserRepository)
             
             password_hash = await asyncio.to_thread(UserSecurity.hash_password, data.password)
-            user = await repo.create(username=data.username, email=data.email, password_hash=password_hash)
-            
+
             try:
+                user = await repo.create(
+                    username=data.username,
+                    email=data.email,
+                    password_hash=password_hash,
+                )
                 await self.uow.commit()
             except IntegrityError:
                 await self.uow.rollback()
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Username ou e-mail já cadastrado no sistema.",
-                )
-                
+                ) from None
+
             await self.uow.refresh(user)
             return UserResponse.model_validate(user)
 

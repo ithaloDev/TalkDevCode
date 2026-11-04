@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, StringConstraints
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, StringConstraints
 from typing import Annotated, List
 
 from app.modules.users.roles import UserRole
@@ -9,7 +9,17 @@ from app.modules.comments.schema import CommentActivityResponse
 
 
 Username = Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=50, pattern=r"^[A-Za-z0-9_.-]+$")]
-Password = Annotated[str, StringConstraints(min_length=8, max_length=72)]
+def validate_password_byte_length(value: str) -> str:
+    if len(value.encode("utf-8")) > 72:
+        raise ValueError("A senha deve possuir no máximo 72 bytes em UTF-8.")
+    return value
+
+
+Password = Annotated[
+    str,
+    StringConstraints(min_length=8, max_length=72),
+    AfterValidator(validate_password_byte_length),
+]
 
 
 class UserCreateRequest(BaseModel):

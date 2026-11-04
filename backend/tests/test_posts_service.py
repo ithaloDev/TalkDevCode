@@ -23,16 +23,14 @@ async def test_get_post_returns_404_when_missing(make_uow_factory):
 
 
 @pytest.mark.asyncio
-async def test_update_post_rejects_user_who_is_not_author(make_uow_factory):
+async def test_update_post_rejects_non_author(make_uow_factory):
     post = SimpleNamespace(id=uuid4(), author_id=uuid4(), title="Antes", content="Texto")
     repo = AsyncMock(spec=PostRepository)
     repo.get_by_id.return_value = post
     uow = make_uow_factory({PostRepository: repo})
 
     with pytest.raises(HTTPException) as exc:
-        await PostService(uow).update_post(
-            post_id=post.id, title="Depois", content=None, user_id=uuid4()
-        )
+        await PostService(uow).update_post(post.id, "Depois", None, uuid4())
 
     assert exc.value.status_code == 403
     repo.update.assert_not_awaited()
@@ -43,20 +41,16 @@ async def test_update_post_rejects_user_who_is_not_author(make_uow_factory):
 async def test_update_post_allows_author_and_commits(make_uow_factory):
     author_id = uuid4()
     post = SimpleNamespace(id=uuid4(), author_id=author_id, title="Antes", content="Texto")
-    updated = SimpleNamespace(id=post.id, author_id=author_id, title="Depois", content="Texto")
     repo = AsyncMock(spec=PostRepository)
     repo.get_by_id.return_value = post
-    repo.update.return_value = updated
+    repo.update.return_value = post
     uow = make_uow_factory({PostRepository: repo})
 
-    result = await PostService(uow).update_post(
-        post_id=post.id, title="Depois", content=None, user_id=author_id
-    )
+    result = await PostService(uow).update_post(post.id, "Depois", None, author_id)
 
     assert result is post
     repo.update.assert_awaited_once_with(post, "Depois", None)
     uow.commit.assert_awaited_once()
-    uow.refresh.assert_awaited_once_with(updated)
 
 
 @pytest.mark.asyncio

@@ -21,7 +21,7 @@ class PostRepository:
         query = (
             select(Post)
             .options(selectinload(Post.author))
-            .order_by(Post.created_at.desc())
+            .order_by(Post.created_at.desc(), Post.id.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -52,9 +52,9 @@ class PostRepository:
         return await self.add(post)
 
     async def update(self, post: Post, title: Optional[str], content: Optional[str]) -> Post:
-        if title:
+        if title is not None:
             post.title = title
-        if content:
+        if content is not None:
             post.content = content
             
         await self.session.flush()
