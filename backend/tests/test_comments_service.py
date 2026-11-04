@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from types import SimpleNamespace
 from uuid import uuid4
 from unittest.mock import AsyncMock
@@ -6,9 +7,19 @@ import pytest
 from fastapi import HTTPException
 
 from app.modules.comments.repository import CommentRepository
+from app.modules.comments.schema import CommentCreate, CommentUpdate
 from app.modules.comments.service import CommentService
 from app.modules.posts.repository import PostRepository
 from app.modules.users.roles import UserRole
+
+
+def comment_entity(user_id=None, post_id=None):
+    return SimpleNamespace(
+        id=uuid4(), content="Comentário", post_id=post_id or uuid4(),
+        user_id=user_id or uuid4(), author=SimpleNamespace(id=user_id or uuid4(), username="autor"),
+        parent_id=None, parent_author=None,
+        created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
+    )
 
 
 @pytest.mark.asyncio
@@ -16,14 +27,11 @@ async def test_create_comment_returns_404_when_post_does_not_exist(make_uow_fact
     comment_repo = AsyncMock(spec=CommentRepository)
     post_repo = AsyncMock(spec=PostRepository)
     post_repo.get_by_id.return_value = None
-    uow = make_uow_factory({
-        CommentRepository: comment_repo,
-        PostRepository: post_repo,
-    })
+    uow = make_uow_factory({CommentRepository: comment_repo, PostRepository: post_repo})
 
     with pytest.raises(HTTPException) as exc:
         await CommentService(uow).create_comment(
-            content="Comentário", post_id=uuid4(), user_id=uuid4()
+            CommentCreate(content="Comentário", post_id=uuid4()), uuid4()
         )
 
     assert exc.value.status_code == 404
@@ -32,40 +40,36 @@ async def test_create_comment_returns_404_when_post_does_not_exist(make_uow_fact
 
 
 @pytest.mark.asyncio
-async def test_create_comment_creates_and_commits(make_uow_factory):
+async def test_create_comment_creates_and_returns_hydrated_response(make_uow_factory):
     post_id, user_id = uuid4(), uuid4()
-    post = SimpleNamespace(id=post_id)
-    comment = SimpleNamespace(id=uuid4(), content="Comentário")
+    created = comment_entity(user_id, post_id)
     comment_repo = AsyncMock(spec=CommentRepository)
-    comment_repo.create.return_value = comment
+    comment_repo.create.return_value = created
+    comment_repo.get_by_id.return_value = created
     post_repo = AsyncMock(spec=PostRepository)
-    post_repo.get_by_id.return_value = post
-    uow = make_uow_factory({
-        CommentRepository: comment_repo,
-        PostRepository: post_repo,
-    })
+    post_repo.get_by_id.return_value = SimpleNamespace(id=post_id)
+    uow = make_uow_factory({CommentRepository: comment_repo, PostRepository: post_repo})
 
     result = await CommentService(uow).create_comment(
-        content="Comentário", post_id=post_id, user_id=user_id
+        CommentCreate(content="Comentário", post_id=post_id), user_id
     )
 
-    assert result is comment
+    assert result.id == created.id
     comment_repo.create.assert_awaited_once_with(
-        content="Comentário", post_id=post_id, user_id=user_id
+        content="Comentário", post_id=post_id, user_id=user_id, parent_id=None
     )
     uow.commit.assert_awaited_once()
-    uow.refresh.assert_awaited_once_with(comment)
 
 
 @pytest.mark.asyncio
 async def test_update_comment_rejects_non_author(make_uow_factory):
-    comment = SimpleNamespace(id=uuid4(), user_id=uuid4(), content="Original")
+    comment = comment_entity()
     repo = AsyncMock(spec=CommentRepository)
     repo.get_by_id.return_value = comment
     uow = make_uow_factory({CommentRepository: repo})
 
     with pytest.raises(HTTPException) as exc:
-        await CommentService(uow).update_comment(comment.id, "Alterado", uuid4())
+        await CommentService(uow).update_comment(comment.id, CommentUpdate(content="Alterado"), uuid4())
 
     assert exc.value.status_code == 403
     repo.update.assert_not_awaited()
@@ -74,7 +78,7 @@ async def test_update_comment_rejects_non_author(make_uow_factory):
 @pytest.mark.asyncio
 async def test_delete_comment_allows_author(make_uow_factory):
     author_id = uuid4()
-    comment = SimpleNamespace(id=uuid4(), user_id=author_id)
+    comment = comment_entity(user_id=author_id)
     repo = AsyncMock(spec=CommentRepository)
     repo.get_by_id.return_value = comment
     uow = make_uow_factory({CommentRepository: repo})
@@ -87,7 +91,7 @@ async def test_delete_comment_allows_author(make_uow_factory):
 
 @pytest.mark.asyncio
 async def test_delete_comment_rejects_non_author(make_uow_factory):
-    comment = SimpleNamespace(id=uuid4(), user_id=uuid4())
+    comment = comment_entity()
     repo = AsyncMock(spec=CommentRepository)
     repo.get_by_id.return_value = comment
     uow = make_uow_factory({CommentRepository: repo})
@@ -101,7 +105,7 @@ async def test_delete_comment_rejects_non_author(make_uow_factory):
 
 @pytest.mark.asyncio
 async def test_delete_comment_by_staff_allows_moderator(make_uow_factory):
-    comment = SimpleNamespace(id=uuid4())
+    comment = comment_entity()
     repo = AsyncMock(spec=CommentRepository)
     repo.get_by_id.return_value = comment
     uow = make_uow_factory({CommentRepository: repo})
@@ -114,7 +118,7 @@ async def test_delete_comment_by_staff_allows_moderator(make_uow_factory):
 
 @pytest.mark.asyncio
 async def test_delete_comment_by_staff_rejects_regular_user(make_uow_factory):
-    comment = SimpleNamespace(id=uuid4())
+    comment = comment_entity()
     repo = AsyncMock(spec=CommentRepository)
     repo.get_by_id.return_value = comment
     uow = make_uow_factory({CommentRepository: repo})
