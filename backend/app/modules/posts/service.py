@@ -48,8 +48,6 @@ class PostService:
             post_updated = await repo.update(post, title, content)
 
             await self.uow.commit()
-            await self.uow.refresh(post_updated)
-
             return post
 
     
