@@ -17,8 +17,6 @@ def upgrade() -> None:
         sa.Column("password_hash", sa.String(256), nullable=False),
         sa.Column("role", sa.String(80), server_default="user", nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("email"),
-        sa.UniqueConstraint("username"),
     )
     op.create_index("ix_users_username", "users", ["username"], unique=True)
     op.create_index("ix_users_email", "users", ["email"], unique=True)
