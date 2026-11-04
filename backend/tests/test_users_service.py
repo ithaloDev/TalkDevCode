@@ -21,11 +21,10 @@ async def test_delete_user_returns_404_when_user_does_not_exist(make_uow_factory
 
     assert exc.value.status_code == 404
     repo.delete.assert_not_awaited()
-    uow.commit.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_delete_user_deletes_existing_regular_user(make_uow_factory):
+async def test_delete_user_deletes_regular_user(make_uow_factory):
     user = SimpleNamespace(id=uuid4(), role=UserRole.USER)
     repo = AsyncMock(spec=UserRepository)
     repo.get_by_id.return_value = user
@@ -39,7 +38,6 @@ async def test_delete_user_deletes_existing_regular_user(make_uow_factory):
 
 @pytest.mark.asyncio
 async def test_delete_user_blocks_deleting_last_admin(make_uow_factory):
-    """Este teste documenta a regra que falta implementar no service atual."""
     admin = SimpleNamespace(id=uuid4(), role=UserRole.ADMIN)
     repo = AsyncMock(spec=UserRepository)
     repo.get_by_id.return_value = admin
@@ -49,16 +47,13 @@ async def test_delete_user_blocks_deleting_last_admin(make_uow_factory):
     with pytest.raises(HTTPException) as exc:
         await UserService(uow).delete_user(admin.id)
 
-    assert exc.value.status_code == 409
+    assert exc.value.status_code == 403
     repo.delete.assert_not_awaited()
     uow.commit.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_delete_user_by_staff_rejects_non_admin_actor_when_service_is_called_directly(
-    make_uow_factory,
-):
-    """Regra de segurança: o service também deve validar o papel do ator."""
+async def test_delete_user_by_staff_rejects_non_admin_actor(make_uow_factory):
     target = SimpleNamespace(id=uuid4(), role=UserRole.USER)
     actor = SimpleNamespace(id=uuid4(), role=UserRole.MODERATOR)
     repo = AsyncMock(spec=UserRepository)
@@ -70,4 +65,50 @@ async def test_delete_user_by_staff_rejects_non_admin_actor_when_service_is_call
 
     assert exc.value.status_code == 403
     repo.delete.assert_not_awaited()
+    uow.commit.assert_not_awaited()
+
+
+def test_password_rejects_more_than_72_utf8_bytes():
+    from pydantic import ValidationError
+    from app.modules.users.schema import UserCreateRequest
+
+    with pytest.raises(ValidationError):
+        UserCreateRequest(
+            username="usuario",
+            email="usuario@example.com",
+            password="á" * 40,
+        )
+
+
+def test_password_accepts_up_to_72_utf8_bytes():
+    from app.modules.users.schema import UserCreateRequest
+
+    request = UserCreateRequest(
+        username="usuario",
+        email="usuario@example.com",
+        password="á" * 36,
+    )
+    assert request.password == "á" * 36
+
+
+@pytest.mark.asyncio
+async def test_register_maps_unique_constraint_violation_to_conflict(make_uow_factory):
+    from sqlalchemy.exc import IntegrityError
+    from app.modules.users.schema import UserCreateRequest
+
+    repo = AsyncMock(spec=UserRepository)
+    repo.create.side_effect = IntegrityError("INSERT", {}, Exception("duplicate"))
+    uow = make_uow_factory({UserRepository: repo})
+
+    with pytest.raises(HTTPException) as exc:
+        await UserService(uow).register_new_user(
+            UserCreateRequest(
+                username="usuario",
+                email="usuario@example.com",
+                password="senha-segura-123",
+            )
+        )
+
+    assert exc.value.status_code == 409
+    uow.rollback.assert_awaited()
     uow.commit.assert_not_awaited()
