@@ -19,7 +19,7 @@ if database_url.drivername in {"postgres", "postgresql"}:
     sslmode = query.pop("sslmode", None)
 
     if sslmode == "require":
-        connect_args["ssl"] = "require"
+        connect_args["ssl"] = True
     elif sslmode not in (None, "disable"):
         raise ValueError(
             "SSL mode não suportado na URL do PostgreSQL. "
