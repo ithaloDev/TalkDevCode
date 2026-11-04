@@ -66,3 +66,26 @@ async def test_delete_user_by_staff_rejects_non_admin_actor(make_uow_factory):
     assert exc.value.status_code == 403
     repo.delete.assert_not_awaited()
     uow.commit.assert_not_awaited()
+
+
+def test_password_rejects_more_than_72_utf8_bytes():
+    from pydantic import ValidationError
+    from app.modules.users.schema import UserCreateRequest
+
+    with pytest.raises(ValidationError):
+        UserCreateRequest(
+            username="usuario",
+            email="usuario@example.com",
+            password="á" * 40,
+        )
+
+
+def test_password_accepts_up_to_72_utf8_bytes():
+    from app.modules.users.schema import UserCreateRequest
+
+    request = UserCreateRequest(
+        username="usuario",
+        email="usuario@example.com",
+        password="á" * 36,
+    )
+    assert request.password == "á" * 36
