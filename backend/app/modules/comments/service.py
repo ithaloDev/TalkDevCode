@@ -14,7 +14,7 @@ class CommentService:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
 
-    async def list_comments(self, limit: int = PaginationParams.limit, offset: int = PaginationParams.offset) -> Sequence[CommentResponse]:
+    async def list_comments(self, limit: int = 20, offset: int = 0) -> Sequence[CommentResponse]:
         async with self.uow:
             repo = self.uow.get_repository(CommentRepository)
             comments = await repo.get_all(limit=limit, offset=offset)
