@@ -29,9 +29,8 @@ class PostService:
             post = await repo.create(title=title, content=content, author_id=author_id)
 
             await self.uow.commit()
-            await self.uow.refresh(post)
-
-            return post
+            persisted_post = await repo.get_by_id(post.id)
+            return persisted_post
 
     async def update_post(self, post_id: UUID, title: Optional[str], content: Optional[str], user_id: UUID) -> Post:
         async with self.uow:
@@ -49,8 +48,6 @@ class PostService:
             post_updated = await repo.update(post, title, content)
 
             await self.uow.commit()
-            await self.uow.refresh(post_updated)
-
             return post
 
     
