@@ -1,4 +1,4 @@
-from typing import Sequence, Annotated
+from typing import Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from app.modules.users.deps import get_current_user, require_staff
 from app.modules.users.schema import UserResponse
 from .deps import get_comment_service
-from .schema import CommentCreate, CommentResponse, CommentUpdate, PaginationParams
+from .schema import CommentCreate, CommentResponse, CommentUpdate
 from .service import CommentService
 
 
@@ -15,19 +15,21 @@ comment_router = APIRouter(prefix="/comments", tags=["Comments"])
 
 @comment_router.get("/", response_model=Sequence[CommentResponse])
 async def list_comments(
-    PaginationParams: Annotated[PaginationParams, Query()],
-    service: CommentService = Depends(get_comment_service)
+    limit: int = Query(default=20, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+    service: CommentService = Depends(get_comment_service),
 ):
-    return await service.list_comments(limit=PaginationParams.limit, offset=PaginationParams.offset)
+    return await service.list_comments(limit=limit, offset=offset)
 
 
 @comment_router.get("/post/{post_id}", response_model=Sequence[CommentResponse])
 async def list_comments_by_post(
     post_id: UUID,
-    PaginationParams: Annotated[PaginationParams, Query()],
-    service: CommentService = Depends(get_comment_service)
+    limit: int = Query(default=20, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+    service: CommentService = Depends(get_comment_service),
 ):
-    return await service.list_comments_by_post(post_id, limit=PaginationParams.limit, offset=PaginationParams.offset)
+    return await service.list_comments_by_post(post_id, limit=limit, offset=offset)
 
 
 @comment_router.get("/{comment_id}", response_model=CommentResponse)
@@ -39,11 +41,9 @@ async def get_comment(comment_id: UUID, service: CommentService = Depends(get_co
 async def create_comment(
     data: CommentCreate,
     current_user: UserResponse = Depends(get_current_user),
-    service: CommentService = Depends(get_comment_service)
+    service: CommentService = Depends(get_comment_service),
 ):
-    comment = await service.create_comment(data=data, user_id=current_user.id)
-    
-    return comment
+    return await service.create_comment(data=data, user_id=current_user.id)
 
 
 @comment_router.put("/{comment_id}", response_model=CommentResponse)
@@ -51,7 +51,7 @@ async def update_comment(
     comment_id: UUID,
     content: CommentUpdate,
     current_user: UserResponse = Depends(get_current_user),
-    service: CommentService = Depends(get_comment_service)
+    service: CommentService = Depends(get_comment_service),
 ):
     return await service.update_comment(comment_id=comment_id, content=content, user_id=current_user.id)
 
