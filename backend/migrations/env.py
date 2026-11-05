@@ -4,11 +4,6 @@ from alembic import context
 from app.core.config import settings
 from app.core.database import engine, Base
 
-# Registrar todos os modelos no metadata do SQLAlchemy.
-from app.modules.users import model as user_model  # noqa: F401
-from app.modules.posts import model as post_model  # noqa: F401
-from app.modules.comments import model as comment_model  # noqa: F401
-
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

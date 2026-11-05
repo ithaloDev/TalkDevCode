@@ -34,7 +34,10 @@ if database_url.drivername in "postgresql":
         if ssl_mode == "disable":
             connect_args["ssl"] = False
         elif ssl_mode in {"require", "allow", "prefer"}:
-            connect_args["ssl"] = True
+            ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            connect_args["ssl"] = ctx
         elif ssl_mode in {"verify-ca", "verify-full"}:
             ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             if ssl_mode == "verify-ca":
