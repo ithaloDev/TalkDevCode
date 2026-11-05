@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Escrever artigo — TalkDevCode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/tokens.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/pages.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner"><a class="brand" href="../"><span class="brand-mark">&lt;/&gt;</span><span>Talk<span
+                        class="brand-accent">Dev</span>Code</span></a><span class="eyebrow">NOVO ARTIGO</span>
+            <nav class="header-actions"><button class="icon-button" id="theme-toggle" type="button"
+                    aria-label="Alternar tema">☀</button><a class="button button-quiet" href="../">Voltar ao feed</a>
+            </nav>
+        </div>
+    </header>
+    <main class="editor-layout">
+        <section class="editor-card">
+            <p class="eyebrow">PUBLICAÇÃO</p>
+            <h1>Compartilhe uma ideia</h1>
+            <form id="editor-form" class="editor-form">
+                <label for="title">Título</label>
+                <input id="title" name="title" minlength="3" maxlength="200" required placeholder="Um título claro e interessante">
+                <label for="content">Conteúdo</label>
+                <textarea id="content" name="content" maxlength="100000" required placeholder="Escreva seu artigo..."></textarea>
+                <p id="editor-error" class="form-error" role="alert"></p>
+                <div class="modal-actions">
+                    <a class="button button-quiet" href="../">Cancelar</a>
+                    <button class="button button-primary" type="button" id="btnSubmit">Publicar artigo</button>
+                </div>
+            </form>
+        </section>
+    </main>
+    <div class="toast-region" id="toast-region" aria-live="polite"></div>
+</body>
+<script type="module" src="../js/new-post.js"></script>
+</html>
