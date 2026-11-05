@@ -16,15 +16,24 @@ connect_args = {}
 if database_url.drivername in {"postgres", "postgresql"}:
     database_url = database_url.set(drivername="postgresql+asyncpg")
     query = dict(database_url.query)
-    sslmode = query.pop("sslmode", None)
 
-    if sslmode == "require" or (database_url.host or "").endswith(".pooler.supabase.com"):
-        connect_args["ssl"] = True
-    elif sslmode not in (None, "disable"):
+    # O asyncpg recebe o modo SSL por connect_args. Remover os parâmetros da
+    # URL evita que opções duplicadas sejam encaminhadas pelo dialeto.
+    ssl_mode = query.pop("ssl", query.pop("sslmode", None))
+
+    if ssl_mode not in (None, "disable", "require", "verify-ca", "verify-full"):
         raise ValueError(
-            "SSL mode não suportado na URL do PostgreSQL. "
-            "Use sslmode=require para conexões Supabase."
+            "Modo SSL não suportado para PostgreSQL. "
+            "Use disable, require, verify-ca ou verify-full."
         )
+
+    if ssl_mode is not None:
+        connect_args["ssl"] = False if ssl_mode == "disable" else ssl_mode
+    elif (database_url.host or "").endswith(".pooler.supabase.com"):
+        # O pooler Supabase exige conexão criptografada. 'require' evita
+        # falha por CA não instalada no ambiente do Render; para validar
+        # também a identidade do servidor, configure verify-full com a CA.
+        connect_args["ssl"] = "require"
 
     # O pooler em modo transaction (porta 6543) não mantém prepared statements.
     if database_url.port == 6543:
