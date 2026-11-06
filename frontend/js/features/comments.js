@@ -64,11 +64,10 @@ export class CommentsController {
 
   avatar(username, className = "comment-avatar") {
     const img = document.createElement("img");
-    username = `${username}_${Session.user?.id}`.slice(0,8);
     img.className = className; 
     img.alt = ""; 
     img.loading = "lazy";
-    img.src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(username)}`;
+    img.src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(username).concat("_" + Session.user?.id).slice(0,8)}`;
     return img;
   }
 

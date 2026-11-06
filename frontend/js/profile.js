@@ -17,7 +17,7 @@ class ProfilePage {
       const activity = await api.get("/users/me/activity", { token: Session.token });
       const username = activity.user.username;
       document.getElementById("profile-name").textContent = `@${username}`;
-      document.getElementById("profile-avatar").src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(username + "_" + Session.user?.id).slice(0,8)}`;
+      document.getElementById("profile-avatar").src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(username).concat("_" + Session.user?.id).slice(0,8)}}`;
       document.getElementById("profile-summary").textContent = `${activity.posts.length} artigos publicados · ${activity.comments.length} comentários`;
       this.renderPosts(activity.posts);
       this.renderComments(activity.comments);
