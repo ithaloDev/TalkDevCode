@@ -38,7 +38,7 @@ class TalkDevApp {
     if (authenticated) {
       document.getElementById("user-name").textContent = `@${Session.user.username}`;
       document.getElementById("user-avatar").textContent = "";
-      document.getElementById("user-avatar").style.backgroundImage = `url("https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(Session.user.username)}")`;
+      document.getElementById("user-avatar").style.backgroundImage = `url("https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(Session.user.username + "_" + Session.user?.id).slice(0,8)}")`;
     }
     this.comments.updateSessionState();
   }

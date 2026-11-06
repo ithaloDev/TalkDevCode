@@ -198,7 +198,7 @@ export class PostsController {
     avatar.className = "article-avatar";
     avatar.alt = "";
     avatar.loading = "lazy";
-    avatar.src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(post.author?.username || "dev")}`;
+    avatar.src = `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(username + "_" + Session.user?.id).slice(0,8)}`;
     const authorWrap = document.createElement("div");
     const author = document.createElement("span");
     author.className = "article-author";
