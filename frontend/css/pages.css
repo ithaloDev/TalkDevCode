@@ -117,6 +117,7 @@
 .profile-heading img { width: 76px; height: 76px; border-radius: 50%; }
 .activity-list { display: grid; gap: 12px; margin-top: 18px; }
 .activity-item { padding: 16px 0; border-bottom: 1px solid var(--color-border); }
+.activity-item a { margin-right: 16px; }
 .editor-form { display: grid; gap: 14px; }
 .editor-form textarea { min-height: 320px; }
 @media (max-width: 900px) {
