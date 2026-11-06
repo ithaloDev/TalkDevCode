@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from app.modules.users.deps import get_current_user, require_staff
 from app.modules.users.model import User
 from .deps import get_post_service
-from .schema import PostCreateSchema, PostResponseSchema, PostUpdateSchema, SearchParam, LimitParam, OffsetParam
+from .schema import PostCreateSchema, PostResponseSchema, PostUpdateSchema, PaginationParams
 from .service import PostService
 
 
@@ -15,12 +15,10 @@ post_router = APIRouter(prefix="/posts", tags=["Posts"])
 
 @post_router.get("/", response_model=Sequence[PostResponseSchema])
 async def list_posts(
-    limit: LimitParam,
-    offset: OffsetParam,
-    search: SearchParam,
+    params: PaginationParams = Depends(),
     service: PostService = Depends(get_post_service)
 ):
-    return await service.list_posts(limit=limit.limit, offset=offset.offset, search=search.search)
+    return await service.list_posts(limit=params.limit, offset=params.offset, search=params.search)
 
 
 @post_router.get("/{post_id}", response_model=PostResponseSchema)

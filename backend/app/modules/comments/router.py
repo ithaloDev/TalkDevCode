@@ -1,12 +1,12 @@
 from typing import Sequence
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 
 from app.modules.users.deps import get_current_user, require_staff
 from app.modules.users.schema import UserResponse
 from .deps import get_comment_service
-from .schema import CommentCreate, CommentResponse, CommentUpdate, LimitParam, OffsetParam
+from .schema import CommentCreate, CommentResponse, CommentUpdate, PaginationParams
 from .service import CommentService
 
 
@@ -15,21 +15,19 @@ comment_router = APIRouter(prefix="/comments", tags=["Comments"])
 
 @comment_router.get("/", response_model=Sequence[CommentResponse])
 async def list_comments(
-    limit: LimitParam,
-    offset: OffsetParam,
+    params: PaginationParams = Depends(),
     service: CommentService = Depends(get_comment_service)
 ):
-    return await service.list_comments(limit=limit.limit, offset=offset.offset)
+    return await service.list_comments(limit=params.limit, offset=params.offset)
 
 
 @comment_router.get("/post/{post_id}", response_model=Sequence[CommentResponse])
 async def list_comments_by_post(
     post_id: UUID,
-    limit: LimitParam,
-    offset: OffsetParam,
+    params: PaginationParams = Depends(),
     service: CommentService = Depends(get_comment_service),
 ):
-    return await service.list_comments_by_post(post_id, limit=limit.limit, offset=offset.offset)
+    return await service.list_comments_by_post(post_id, limit=params.limit, offset=params.offset)
 
 
 @comment_router.get("/{comment_id}", response_model=CommentResponse)

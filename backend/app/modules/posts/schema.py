@@ -12,19 +12,10 @@ from typing import Annotated, Optional
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=200)]
 Content = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100000)]
 
-
-class SearchParam(BaseModel):
-    search: Optional[str] = Query(default=None, min_length=1, max_length=200)
-
 class PaginationParams(BaseModel):
     limit: int = Query(default=20, ge=1, le=100)
     offset: int = Query(default=0, ge=0)
-    
-class LimitParam(BaseModel):
-    limit: int = Query(default=20, ge=1, le=100)
-    
-class OffsetParam(PaginationParams):
-    offset: int = Query(default=0, ge=0)
+    search: Optional[str] = Query(default="", min_length=1, max_length=200)
 
 class PostCreateSchema(BaseModel):
     title: Title
